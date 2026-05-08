@@ -39,7 +39,8 @@ def register(user: UserCreate):
 
     new_user = User(
         username=user.username,
-        password=hashed_password
+        password=hashed_password,
+        role=user.role
     )
 
     db.add(new_user)
@@ -81,7 +82,8 @@ def login(user: UserLogin):
         }
 
     token = create_access_token({
-        "sub": db_user.username
+        "sub": db_user.username,
+        "role": db_user.role
     })
 
     return {

@@ -1,8 +1,18 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException
+)
+
 from sqlalchemy.orm import Session
 
-from app.database.connection import SessionLocal
-from app.models.ticket_model import Ticket
+from app.database.connection import (
+    SessionLocal
+)
+
+from app.models.ticket_model import (
+    Ticket
+)
 
 from app.schemas.ticket_schema import (
     TicketCreate,
@@ -22,10 +32,11 @@ router = APIRouter(
     tags=["Tickets"]
 )
 
+
 @router.post("/", response_model=TicketResponse)
 def create_ticket(
     ticket: TicketCreate,
-    user: str = Depends(get_current_user)
+    user=Depends(get_current_user)
 ):
 
     db: Session = SessionLocal()
@@ -53,7 +64,7 @@ def create_ticket(
 
 @router.get("/", response_model=list[TicketResponse])
 def get_tickets(
-    user: str = Depends(get_current_user)
+    user=Depends(get_current_user)
 ):
 
     db: Session = SessionLocal()
@@ -67,8 +78,15 @@ def get_tickets(
 def update_ticket_status(
     ticket_id: int,
     status: str,
-    user: str = Depends(get_current_user)
+    user=Depends(get_current_user)
 ):
+
+    if user["role"] != "admin":
+
+        raise HTTPException(
+            status_code=403,
+            detail="Not enough permissions"
+        )
 
     db: Session = SessionLocal()
 

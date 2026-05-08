@@ -22,3 +22,8 @@ class User(Base):
         String,
         nullable=False
     )
+
+    role = Column(
+    String,
+    default="agent"
+    )

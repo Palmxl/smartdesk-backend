@@ -35,7 +35,9 @@ def get_current_user(
                 detail="Invalid token"
             )
 
-        return username
+        return {"username": username, 
+                "role": payload.get("role")
+        }
 
     except JWTError:
 
