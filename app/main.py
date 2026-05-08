@@ -7,6 +7,10 @@ from app.database.base import Base
 
 from app.routes.ticket_routes import router as ticket_router
 
+from app.routes.auth_routes import (
+    router as auth_router
+)
+
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
@@ -20,6 +24,7 @@ app.add_middleware(
 )
 
 app.include_router(ticket_router)
+app.include_router(auth_router)
 
 @app.get("/")
 def root():
