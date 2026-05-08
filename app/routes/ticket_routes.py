@@ -52,3 +52,30 @@ def get_tickets():
     tickets = db.query(Ticket).all()
 
     return tickets
+
+@router.put("/{ticket_id}/status")
+def update_ticket_status(
+    ticket_id: int,
+    status: str
+):
+
+    db: Session = SessionLocal()
+
+    ticket = (
+        db.query(Ticket)
+        .filter(Ticket.id == ticket_id)
+        .first()
+    )
+
+    if not ticket:
+        return {
+            "error": "Ticket not found"
+        }
+
+    ticket.status = status
+
+    db.commit()
+
+    db.refresh(ticket)
+
+    return ticket
