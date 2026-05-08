@@ -10,6 +10,8 @@ class TicketResponse(BaseModel):
     description: str
     priority: str
     status: str
+    sentiment: str
+    category: str
 
     class Config:
         from_attributes = True

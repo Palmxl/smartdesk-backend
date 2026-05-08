@@ -3,9 +3,14 @@ from sqlalchemy.orm import Session
 
 from app.database.connection import SessionLocal
 from app.models.ticket_model import Ticket
+
 from app.schemas.ticket_schema import (
     TicketCreate,
     TicketResponse
+)
+
+from app.services.ticket_classifier import (
+    classify_ticket
 )
 
 router = APIRouter(
@@ -18,13 +23,22 @@ def create_ticket(ticket: TicketCreate):
 
     db: Session = SessionLocal()
 
+    classification = classify_ticket(
+        ticket.description
+    )
+
     new_ticket = Ticket(
         title=ticket.title,
-        description=ticket.description
+        description=ticket.description,
+        priority=classification["priority"],
+        sentiment=classification["sentiment"],
+        category=classification["category"],
     )
 
     db.add(new_ticket)
+
     db.commit()
+
     db.refresh(new_ticket)
 
     return new_ticket
