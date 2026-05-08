@@ -15,6 +15,10 @@ from app.routes.websocket_routes import (
     router as websocket_router
 )
 
+from app.routes.chat_routes import (
+    router as chat_router
+)
+
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
@@ -29,6 +33,7 @@ app.add_middleware(
 
 app.include_router(ticket_router)
 app.include_router(auth_router)
+app.include_router(chat_router)
 
 @app.get("/")
 def root():
