@@ -1,3 +1,5 @@
+import asyncio
+
 from fastapi import (
     APIRouter,
     Depends,
@@ -12,6 +14,10 @@ from app.database.connection import (
 
 from app.models.ticket_model import (
     Ticket
+)
+
+from app.services.websocket_manager import (
+    manager
 )
 
 from app.schemas.ticket_schema import (
@@ -58,6 +64,12 @@ def create_ticket(
     db.commit()
 
     db.refresh(new_ticket)
+
+    asyncio.create_task(
+        manager.broadcast(
+            "ticket_updated"
+        )
+    )
 
     return new_ticket
 
@@ -108,5 +120,11 @@ def update_ticket_status(
     db.commit()
 
     db.refresh(ticket)
+
+    asyncio.create_task(
+        manager.broadcast(
+            "ticket_updated"
+        )
+    )
 
     return ticket
