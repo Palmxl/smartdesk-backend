@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database.connection import SessionLocal
@@ -7,6 +7,10 @@ from app.models.ticket_model import Ticket
 from app.schemas.ticket_schema import (
     TicketCreate,
     TicketResponse
+)
+
+from app.core.security import (
+    get_current_user
 )
 
 from app.services.ticket_classifier import (
@@ -19,7 +23,10 @@ router = APIRouter(
 )
 
 @router.post("/", response_model=TicketResponse)
-def create_ticket(ticket: TicketCreate):
+def create_ticket(
+    ticket: TicketCreate,
+    user: str = Depends(get_current_user)
+):
 
     db: Session = SessionLocal()
 
@@ -45,7 +52,9 @@ def create_ticket(ticket: TicketCreate):
 
 
 @router.get("/", response_model=list[TicketResponse])
-def get_tickets():
+def get_tickets(
+    user: str = Depends(get_current_user)
+):
 
     db: Session = SessionLocal()
 
@@ -53,10 +62,12 @@ def get_tickets():
 
     return tickets
 
+
 @router.put("/{ticket_id}/status")
 def update_ticket_status(
     ticket_id: int,
-    status: str
+    status: str,
+    user: str = Depends(get_current_user)
 ):
 
     db: Session = SessionLocal()
@@ -68,9 +79,11 @@ def update_ticket_status(
     )
 
     if not ticket:
-        return {
-            "error": "Ticket not found"
-        }
+
+        raise HTTPException(
+            status_code=404,
+            detail="Ticket not found"
+        )
 
     ticket.status = status
 
