@@ -20,12 +20,16 @@ from app.services.websocket_manager import (
 
 router = APIRouter()
 
-@router.websocket("/chat")
+@router.websocket("/chat/{username}")
 async def chat_socket(
-    websocket: WebSocket
+    websocket: WebSocket,
+    username: str
 ):
 
-    await manager.connect(websocket)
+    await manager.connect(
+        websocket,
+        username
+    )
 
     db: Session = SessionLocal()
 
@@ -54,7 +58,12 @@ async def chat_socket(
 
     except WebSocketDisconnect:
 
-        manager.disconnect(websocket)
+        manager.disconnect(
+            websocket,
+            username
+        )
+
+        await manager.broadcast_online_users()
 
 
 @router.get("/messages")
