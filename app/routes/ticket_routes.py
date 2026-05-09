@@ -64,6 +64,12 @@ def create_ticket(
         datetime.utcnow()
         + timedelta(hours=24)
     )
+
+    ai_response = (
+        generate_ticket_response(
+            ticket.description
+        )
+    )
     
     new_ticket = Ticket(
         title=ticket.title,
