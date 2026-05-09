@@ -1,7 +1,8 @@
 from transformers import pipeline
 
 sentiment_pipeline = pipeline(
-    "sentiment-analysis"
+    "sentiment-analysis",
+    device=-1
 )
 
 def classify_ticket_ai(
