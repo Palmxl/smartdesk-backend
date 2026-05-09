@@ -18,3 +18,5 @@ class Ticket(Base):
     sentiment = Column(String, default="Neutral")
 
     category = Column(String, default="General")
+
+    assigned_to = Column(String, nullable=True)

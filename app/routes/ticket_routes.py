@@ -128,3 +128,40 @@ def update_ticket_status(
     )
 
     return ticket
+
+@router.put("/{ticket_id}/assign")
+def assign_ticket(
+    ticket_id: int,
+    assigned_to: str,
+    user=Depends(get_current_user)
+):
+
+    if user["role"] != "admin":
+
+        raise HTTPException(
+            status_code=403,
+            detail="Not enough permissions"
+        )
+
+    db: Session = SessionLocal()
+
+    ticket = (
+        db.query(Ticket)
+        .filter(Ticket.id == ticket_id)
+        .first()
+    )
+
+    if not ticket:
+
+        raise HTTPException(
+            status_code=404,
+            detail="Ticket not found"
+        )
+
+    ticket.assigned_to = assigned_to
+
+    db.commit()
+
+    db.refresh(ticket)
+
+    return ticket

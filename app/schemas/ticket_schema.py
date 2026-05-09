@@ -12,6 +12,7 @@ class TicketResponse(BaseModel):
     status: str
     sentiment: str
     category: str
+    assigned_to: str | None
 
     class Config:
         from_attributes = True
