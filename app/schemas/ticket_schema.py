@@ -18,6 +18,7 @@ class TicketResponse(BaseModel):
     summary: str | None
     created_at: datetime
     sla_deadline: datetime | None
+    ai_response: str | None
 
     class Config:
         from_attributes = True

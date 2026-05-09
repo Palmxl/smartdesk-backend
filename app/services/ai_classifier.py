@@ -5,9 +5,9 @@ sentiment_pipeline = pipeline(
     device=-1
 )
 
-summary_pipeline = pipeline(
-    "summarization",
-    model="sshleifer/distilbart-cnn-12-6",
+generator_pipeline = pipeline(
+    "text-generation",
+    model="distilgpt2",
     device=-1
 )
 
@@ -56,15 +56,31 @@ def summarize_ticket(
     text: str
 ):
 
-    if len(text.split()) < 20:
+    shortened = text[:120]
 
-        return text
+    return shortened + "..."
 
-    result = summary_pipeline(
-        text,
-        max_length=30,
-        min_length=5,
-        do_sample=False
+def generate_ticket_response(
+    text: str
+):
+
+    prompt = f"""
+    Customer issue:
+    {text}
+
+    Support response:
+    """
+
+    result = generator_pipeline(
+        prompt,
+        max_length=80,
+        num_return_sequences=1
     )
 
-    return result[0]["summary_text"]
+    generated = result[0]["generated_text"]
+
+    response = generated.split(
+        "Support response:"
+      )[-1].strip()
+
+    return response

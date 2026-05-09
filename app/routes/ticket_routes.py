@@ -30,11 +30,7 @@ from app.core.security import (
 )
 
 from app.services.ai_classifier import (
-    classify_ticket_ai
-)
-
-from app.services.ai_classifier import (
-    summarize_ticket
+    classify_ticket_ai, summarize_ticket, generate_ticket_response
 )
 
 from datetime import (
@@ -78,6 +74,7 @@ def create_ticket(
         created_at=datetime,
         sla_deadline=sla_deadline,
         summary=summary,
+        ai_response=ai_response,
     )
 
     db.add(new_ticket)

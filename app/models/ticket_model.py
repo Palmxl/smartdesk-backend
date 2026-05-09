@@ -28,3 +28,5 @@ class Ticket(Base):
     sla_deadline = Column(DateTime, nullable=True)
 
     summary = Column(Text, nullable=True)
+
+    ai_response = Column(Text, nullable=True)
