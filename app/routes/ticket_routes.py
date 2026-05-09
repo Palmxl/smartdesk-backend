@@ -33,6 +33,10 @@ from app.services.ai_classifier import (
     classify_ticket_ai, summarize_ticket, generate_ticket_response
 )
 
+from app.websockets.ticket_ws import (
+    broadcast_ticket
+)
+
 from datetime import (
     datetime,
     timedelta
@@ -88,6 +92,12 @@ def create_ticket(
     db.commit()
 
     db.refresh(new_ticket)
+
+    asyncio.create_task(
+        broadcast_ticket(
+            f"New ticket: {new_ticket.title}"
+        )
+    )
 
     asyncio.create_task(
         manager.broadcast(

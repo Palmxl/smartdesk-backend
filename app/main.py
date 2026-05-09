@@ -7,6 +7,11 @@ from app.database.base import Base
 
 from app.routes.ticket_routes import router as ticket_router
 
+from app.websockets.ticket_ws import (
+    connect_ticket_ws,
+    disconnect_ticket_ws
+)
+
 from app.routes.auth_routes import (
     router as auth_router
 )
@@ -38,3 +43,23 @@ app.include_router(chat_router)
 @app.get("/")
 def root():
     return {"message": "SmartDesk API"}
+
+@app.websocket("/tickets/ws")
+async def ticket_ws(
+    websocket: WebSocket
+):
+
+    await connect_ticket_ws(
+        websocket
+    )
+
+    try:
+
+        while True:
+            await websocket.receive_text()
+
+    except:
+
+        await disconnect_ticket_ws(
+            websocket
+        )
