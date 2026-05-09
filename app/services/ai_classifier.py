@@ -5,6 +5,12 @@ sentiment_pipeline = pipeline(
     device=-1
 )
 
+summary_pipeline = pipeline(
+    "summarization",
+    model="sshleifer/distilbart-cnn-12-6",
+    device=-1
+)
+
 def classify_ticket_ai(
     text: str
 ):
@@ -45,3 +51,20 @@ def classify_ticket_ai(
         "sentiment": sentiment,
         "category": category,
     }
+
+def summarize_ticket(
+    text: str
+):
+
+    if len(text.split()) < 20:
+
+        return text
+
+    result = summary_pipeline(
+        text,
+        max_length=30,
+        min_length=5,
+        do_sample=False
+    )
+
+    return result[0]["summary_text"]

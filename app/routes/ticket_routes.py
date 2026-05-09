@@ -33,6 +33,10 @@ from app.services.ai_classifier import (
     classify_ticket_ai
 )
 
+from app.services.ai_classifier import (
+    summarize_ticket
+)
+
 from datetime import (
     datetime,
     timedelta
@@ -56,6 +60,10 @@ def create_ticket(
         ticket.description
     )
 
+    summary = summarize_ticket(
+        ticket.description
+    )
+
     sla_deadline = (
         datetime.utcnow()
         + timedelta(hours=24)
@@ -69,6 +77,7 @@ def create_ticket(
         category=classification["category"],
         created_at=datetime,
         sla_deadline=sla_deadline,
+        summary=summary,
     )
 
     db.add(new_ticket)

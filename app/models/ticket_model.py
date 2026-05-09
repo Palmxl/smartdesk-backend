@@ -26,3 +26,5 @@ class Ticket(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     sla_deadline = Column(DateTime, nullable=True)
+
+    summary = Column(Text, nullable=True)
