@@ -1,4 +1,6 @@
 from sqlalchemy import Column, Integer, String, Text
+from sqlalchemy import DateTime
+from datetime import datetime
 
 from app.database.base import Base
 
@@ -20,3 +22,7 @@ class Ticket(Base):
     category = Column(String, default="General")
 
     assigned_to = Column(String, nullable=True)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    sla_deadline = Column(DateTime, nullable=True)

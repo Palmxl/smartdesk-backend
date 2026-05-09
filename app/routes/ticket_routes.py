@@ -33,6 +33,11 @@ from app.services.ticket_classifier import (
     classify_ticket
 )
 
+from datetime import (
+    datetime,
+    timedelta
+)
+
 router = APIRouter(
     prefix="/tickets",
     tags=["Tickets"]
@@ -51,12 +56,19 @@ def create_ticket(
         ticket.description
     )
 
+    sla_deadline = (
+        datetime.utcnow()
+        + timedelta(hours=24)
+    )
+    
     new_ticket = Ticket(
         title=ticket.title,
         description=ticket.description,
         priority=classification["priority"],
         sentiment=classification["sentiment"],
         category=classification["category"],
+        created_at=datetime,
+        sla_deadline=sla_deadline,
     )
 
     db.add(new_ticket)
