@@ -52,16 +52,21 @@ router = APIRouter(
 )
 
 
-@router.post("/", response_model=TicketResponse)
-def create_ticket(
+@router.post(
+    "/",
+    response_model=TicketResponse
+)
+async def create_ticket(
     ticket: TicketCreate,
     user=Depends(get_current_user)
 ):
 
     db: Session = SessionLocal()
 
-    classification = classify_ticket_ai(
-        ticket.description
+    classification = (
+        classify_ticket_ai(
+            ticket.description
+        )
     )
 
     summary = summarize_ticket(
@@ -78,14 +83,14 @@ def create_ticket(
             ticket.description
         )
     )
-    
+
     new_ticket = Ticket(
         title=ticket.title,
         description=ticket.description,
         priority=classification["priority"],
         sentiment=classification["sentiment"],
         category=classification["category"],
-        created_at=datetime,
+        created_at=datetime.utcnow(),
         sla_deadline=sla_deadline,
         summary=summary,
         ai_response=ai_response,
@@ -105,12 +110,6 @@ def create_ticket(
 
     asyncio.create_task(
         broadcast_ticket(
-            f"New ticket: {new_ticket.title}"
-        )
-    )
-
-    asyncio.create_task(
-        manager.broadcast(
             "ticket_updated"
         )
     )
@@ -118,20 +117,25 @@ def create_ticket(
     return new_ticket
 
 
-@router.get("/", response_model=list[TicketResponse])
+@router.get(
+    "/",
+    response_model=list[TicketResponse]
+)
 def get_tickets(
     user=Depends(get_current_user)
 ):
 
     db: Session = SessionLocal()
 
-    tickets = db.query(Ticket).all()
+    tickets = (
+        db.query(Ticket).all()
+    )
 
     return tickets
 
 
 @router.put("/{ticket_id}/status")
-def update_ticket_status(
+async def update_ticket_status(
     ticket_id: int,
     status: str,
     user=Depends(get_current_user)
@@ -141,14 +145,17 @@ def update_ticket_status(
 
         raise HTTPException(
             status_code=403,
-            detail="Not enough permissions"
+            detail=
+                "Not enough permissions"
         )
 
     db: Session = SessionLocal()
 
     ticket = (
         db.query(Ticket)
-        .filter(Ticket.id == ticket_id)
+        .filter(
+            Ticket.id == ticket_id
+        )
         .first()
     )
 
@@ -165,24 +172,28 @@ def update_ticket_status(
 
     db.refresh(ticket)
 
-    db.refresh(ticket)
-
     log_activity(
         db,
-        f"Changed status of ticket {ticket.id} to {status}",
+        (
+            f"Changed status "
+            f"of ticket "
+            f"{ticket.id} "
+            f"to {status}"
+        ),
         user["username"]
     )
 
     asyncio.create_task(
-        manager.broadcast(
+        broadcast_ticket(
             "ticket_updated"
         )
     )
 
     return ticket
 
+
 @router.put("/{ticket_id}/assign")
-def assign_ticket(
+async def assign_ticket(
     ticket_id: int,
     assigned_to: str,
     user=Depends(get_current_user)
@@ -192,14 +203,17 @@ def assign_ticket(
 
         raise HTTPException(
             status_code=403,
-            detail="Not enough permissions"
+            detail=
+                "Not enough permissions"
         )
 
     db: Session = SessionLocal()
 
     ticket = (
         db.query(Ticket)
-        .filter(Ticket.id == ticket_id)
+        .filter(
+            Ticket.id == ticket_id
+        )
         .first()
     )
 
@@ -210,7 +224,9 @@ def assign_ticket(
             detail="Ticket not found"
         )
 
-    ticket.assigned_to = assigned_to
+    ticket.assigned_to = (
+        assigned_to
+    )
 
     db.commit()
 
@@ -218,8 +234,18 @@ def assign_ticket(
 
     log_activity(
         db,
-        f"Assigned ticket {ticket.id} to {assigned_to}",
+        (
+            f"Assigned ticket "
+            f"{ticket.id} "
+            f"to {assigned_to}"
+        ),
         user["username"]
+    )
+
+    asyncio.create_task(
+        broadcast_ticket(
+            "ticket_updated"
+        )
     )
 
     return ticket

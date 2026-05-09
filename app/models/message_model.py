@@ -5,8 +5,9 @@ from sqlalchemy import (
     Text
 )
 
-from app.database.base import Base
-
+from app.database.connection import (
+    Base
+)
 class Message(Base):
 
     __tablename__ = "messages"

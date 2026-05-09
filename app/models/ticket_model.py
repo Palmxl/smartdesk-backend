@@ -2,8 +2,9 @@ from sqlalchemy import Column, Integer, String, Text
 from sqlalchemy import DateTime
 from datetime import datetime
 
-from app.database.base import Base
-
+from app.database.connection import (
+    Base
+)
 class Ticket(Base):
     __tablename__ = "tickets"
 

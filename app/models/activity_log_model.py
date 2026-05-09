@@ -7,8 +7,9 @@ from sqlalchemy import (
 
 from datetime import datetime
 
-from app.database.connection import Base
-
+from app.database.connection import (
+    Base
+)
 class ActivityLog(Base):
 
     __tablename__ = "activity_logs"
