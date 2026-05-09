@@ -29,8 +29,8 @@ from app.core.security import (
     get_current_user
 )
 
-from app.services.ticket_classifier import (
-    classify_ticket
+from app.services.ai_classifier import (
+    classify_ticket_ai
 )
 
 from datetime import (
@@ -52,7 +52,7 @@ def create_ticket(
 
     db: Session = SessionLocal()
 
-    classification = classify_ticket(
+    classification = classify_ticket_ai(
         ticket.description
     )
 
