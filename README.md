@@ -1,146 +1,117 @@
-# SmartDesk — Upcoming Roadmap 🚀
+# SmartDesk Backend — Local Setup Guide
 
-## Phase 2 — Product Features
+## 1. Enter Backend Folder
 
-### 1. Ticket Details View
-Create a detailed ticket page/modal where agents can:
-
-- View full ticket information
-- Read AI analysis
-- See AI-generated response
-- View SLA deadline
-- See assignment history
-- View ticket status timeline
-
-### 2. Ticket Comments System
-Implement threaded ticket comments:
-
-- Agents can leave comments
-- Real-time updates with WebSockets
-- Internal notes support
-- Comment timestamps
-- User avatars/roles
-
-### 3. File Attachments
-Allow uploads for:
-
-- Screenshots
-- Logs
-- PDFs
-- Images
-
-Backend:
-- Upload API
-- File storage
-- Validation
-
-Frontend:
-- Upload component
-- Attachment previews
-
-### 4. Notifications Center
-Add a notification system:
-
-- Ticket assigned
-- Ticket closed
-- SLA overdue
-- New comments
-- New chat messages
-
-Features:
-- Notification dropdown
-- Read/unread states
-- Real-time updates
+```bash
+cd backend
+```
 
 ---
 
-# Phase 3 — Advanced AI Features 🤖
+## 2. Create Virtual Environment
 
-### 5. AI Priority Explanations
-Show WHY AI selected a priority.
+Linux/macOS:
 
-### 6. AI Department Suggestions
-AI automatically suggests departments.
+```bash
+python3 -m venv venv
+```
 
-### 7. Duplicate Ticket Detection
-AI detects similar tickets.
+Windows:
 
-### 8. AI Assistant Chatbot
-Create a support chatbot.
-
----
-
-# Phase 4 — Backend & Architecture ⚙️
-
-### 9. Environment Variables
-Move sensitive configs into `.env`.
-
-### 10. PostgreSQL Migration
-Replace SQLite with PostgreSQL.
-
-### 11. Alembic Migrations
-Implement DB migrations.
-
-### 12. Repository / Service Pattern
-Refactor backend architecture.
-
-### 13. Dockerization
-Create containers for:
-- Frontend
-- Backend
-- PostgreSQL
-
-### 14. Background Jobs
-Add async workers.
+```bash
+python -m venv venv
+```
 
 ---
 
-# Phase 5 — DevOps & Deployment ☁️
+## 3. Activate Virtual Environment
 
-### 15. Frontend Deployment
-Deploy React app using Vercel.
+Linux/macOS:
 
-### 16. Backend Deployment
-Deploy FastAPI backend using Railway or Render.
+```bash
+source venv/bin/activate
+```
 
-### 17. Production Database
-Deploy PostgreSQL using Neon or Supabase.
+Windows:
 
-### 18. CI/CD Pipeline
-Implement GitHub Actions.
-
-### 19. Monitoring & Logging
-Add monitoring and structured logging.
+```bash
+venv\Scripts\activate
+```
 
 ---
 
-# Phase 6 — Enterprise Features 🏢
+## 4. Install Dependencies
 
-### 20. Role-Based Permissions
-Expand user roles.
+```bash
+pip install -r requirements.txt
+```
 
-### 21. Analytics Dashboard
-Advanced analytics and metrics.
+If `requirements.txt` does not exist:
 
-### 22. Multi-Tenant Support
-Support multiple organizations.
-
-### 23. Email Integration
-Create tickets via email.
-
-### 24. Audit Trail
-Track every important action.
+```bash
+pip freeze > requirements.txt
+```
 
 ---
 
-# Suggested Order 🔥
+## 5. Run Backend
 
-1. Ticket Details View
-2. Comments System
-3. Notifications Center
-4. File Uploads
-5. Dockerization
-6. PostgreSQL Migration
-7. Deployment
-8. CI/CD
-9. Advanced AI Features
+```bash
+uvicorn app.main:app --reload
+```
+
+---
+
+## 6. Backend URLs
+
+API:
+
+```txt
+http://127.0.0.1:8000
+```
+
+Swagger Docs:
+
+```txt
+http://127.0.0.1:8000/docs
+```
+
+---
+
+## 7. Database
+
+Current database:
+
+```txt
+SQLite
+```
+
+Database file:
+
+```txt
+smartdesk.db
+```
+
+---
+
+## 8. Stop Server
+
+Press:
+
+```txt
+CTRL + C
+```
+
+---
+
+## 9. Recommended Structure
+
+```txt
+backend/
+│
+├── app/
+├── venv/
+├── requirements.txt
+├── smartdesk.db
+└── main.py
+```
