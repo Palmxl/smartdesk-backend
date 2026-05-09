@@ -37,6 +37,10 @@ from app.websockets.ticket_ws import (
     broadcast_ticket
 )
 
+from app.services.activity_logger import (
+    log_activity
+)
+
 from datetime import (
     datetime,
     timedelta
@@ -92,6 +96,12 @@ def create_ticket(
     db.commit()
 
     db.refresh(new_ticket)
+
+    log_activity(
+        db,
+        f"Created ticket: {new_ticket.title}",
+        user["username"]
+    )
 
     asyncio.create_task(
         broadcast_ticket(
@@ -155,6 +165,14 @@ def update_ticket_status(
 
     db.refresh(ticket)
 
+    db.refresh(ticket)
+
+    log_activity(
+        db,
+        f"Changed status of ticket {ticket.id} to {status}",
+        user["username"]
+    )
+
     asyncio.create_task(
         manager.broadcast(
             "ticket_updated"
@@ -197,5 +215,11 @@ def assign_ticket(
     db.commit()
 
     db.refresh(ticket)
+
+    log_activity(
+        db,
+        f"Assigned ticket {ticket.id} to {assigned_to}",
+        user["username"]
+    )
 
     return ticket
