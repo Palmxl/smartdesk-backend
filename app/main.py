@@ -36,6 +36,10 @@ from app.routes.chat_routes import (
     router as chat_router
 )
 
+from app.models.comment_model import (
+    TicketComment
+)
+
 from app.routes.activity_routes import (
     router as activity_router
 )

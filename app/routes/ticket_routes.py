@@ -29,6 +29,10 @@ from app.core.security import (
     get_current_user
 )
 
+from app.models.activity_log_model import (
+    ActivityLog
+)
+
 from app.services.ai_classifier import (
     classify_ticket_ai, summarize_ticket, generate_ticket_response
 )
@@ -133,6 +137,56 @@ def get_tickets(
 
     return tickets
 
+@router.get(
+    "/{ticket_id}",
+    response_model=TicketResponse
+)
+def get_ticket_by_id(
+    ticket_id: int,
+    user=Depends(get_current_user)
+):
+
+    db: Session = SessionLocal()
+
+    ticket = (
+        db.query(Ticket)
+        .filter(Ticket.id == ticket_id)
+        .first()
+    )
+
+    if not ticket:
+
+        raise HTTPException(
+            status_code=404,
+            detail="Ticket not found"
+        )
+
+    return ticket
+
+@router.get(
+    "/{ticket_id}/activities"
+)
+def get_ticket_activities(
+    ticket_id: int,
+    user=Depends(get_current_user)
+):
+
+    db: Session = SessionLocal()
+
+    logs = (
+        db.query(ActivityLog)
+        .filter(
+            ActivityLog.action.contains(
+                f"{ticket_id}"
+            )
+        )
+        .order_by(
+            ActivityLog.created_at.desc()
+        )
+        .all()
+    )
+
+    return logs
 
 @router.put("/{ticket_id}/status")
 async def update_ticket_status(
