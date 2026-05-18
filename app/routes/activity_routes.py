@@ -20,12 +20,18 @@ def get_activities():
 
     db: Session = SessionLocal()
 
-    logs = (
-        db.query(ActivityLog)
-        .order_by(
-            ActivityLog.created_at.desc()
-        )
-        .all()
-    )
+    try:
 
-    return logs
+        logs = (
+            db.query(ActivityLog)
+            .order_by(
+                ActivityLog.created_at.desc()
+            )
+            .all()
+        )
+
+        return logs
+
+    finally:
+
+        db.close()

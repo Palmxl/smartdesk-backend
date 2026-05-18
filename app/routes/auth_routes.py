@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+
 from sqlalchemy.orm import Session
 
 from passlib.context import CryptContext
@@ -33,59 +34,78 @@ def register(user: UserCreate):
 
     db: Session = SessionLocal()
 
-    hashed_password = pwd_context.hash(
-        user.password
-    )
+    try:
 
-    new_user = User(
-        username=user.username,
-        password=hashed_password,
-        role=user.role
-    )
+        hashed_password = (
+            pwd_context.hash(
+                user.password
+            )
+        )
 
-    db.add(new_user)
+        new_user = User(
+            username=user.username,
+            password=hashed_password,
+            role=user.role
+        )
 
-    db.commit()
+        db.add(new_user)
 
-    return {
-        "message": "User created"
-    }
+        db.commit()
+
+        return {
+            "message": "User created"
+        }
+
+    finally:
+
+        db.close()
 
 @router.post("/login")
 def login(user: UserLogin):
 
     db: Session = SessionLocal()
 
-    db_user = (
-        db.query(User)
-        .filter(
-            User.username == user.username
-        )
-        .first()
-    )
+    try:
 
-    if not db_user:
+        db_user = (
+            db.query(User)
+            .filter(
+                User.username
+                == user.username
+            )
+            .first()
+        )
+
+        if not db_user:
+
+            return {
+                "error":
+                    "Invalid credentials"
+            }
+
+        valid_password = (
+            pwd_context.verify(
+                user.password,
+                db_user.password
+            )
+        )
+
+        if not valid_password:
+
+            return {
+                "error":
+                    "Invalid credentials"
+            }
+
+        token = create_access_token({
+            "sub": db_user.username,
+            "role": db_user.role
+        })
+
         return {
-            "error": "Invalid credentials"
+            "access_token": token
         }
 
-    valid_password = (
-        pwd_context.verify(
-            user.password,
-            db_user.password
-        )
-    )
+    finally:
 
-    if not valid_password:
-        return {
-            "error": "Invalid credentials"
-        }
-
-    token = create_access_token({
-        "sub": db_user.username,
-        "role": db_user.role
-    })
-
-    return {
-        "access_token": token
-    }
+        db.close()

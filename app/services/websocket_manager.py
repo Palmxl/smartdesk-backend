@@ -20,7 +20,9 @@ class ConnectionManager:
             websocket
         )
 
-        self.online_users.add(username)
+        self.online_users.add(
+            username
+        )
 
         await self.broadcast_online_users()
 
@@ -30,9 +32,13 @@ class ConnectionManager:
         username: str
     ):
 
-        self.active_connections.remove(
-            websocket
-        )
+        if websocket in (
+            self.active_connections
+        ):
+
+            self.active_connections.remove(
+                websocket
+            )
 
         self.online_users.discard(
             username
@@ -43,13 +49,33 @@ class ConnectionManager:
         message: str
     ):
 
+        disconnected = []
+
         for connection in (
             self.active_connections
         ):
 
-            await connection.send_text(
-                message
-            )
+            try:
+
+                await connection.send_text(
+                    message
+                )
+
+            except:
+
+                disconnected.append(
+                    connection
+                )
+
+        for connection in disconnected:
+
+            if connection in (
+                self.active_connections
+            ):
+
+                self.active_connections.remove(
+                    connection
+                )
 
     async def broadcast_online_users(
         self
@@ -60,6 +86,8 @@ class ConnectionManager:
             f"{len(self.online_users)}"
         )
 
-        await self.broadcast(message)
+        await self.broadcast(
+            message
+        )
 
 manager = ConnectionManager()

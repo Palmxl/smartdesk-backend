@@ -25,6 +25,10 @@ from app.schemas.ticket_schema import (
     TicketResponse
 )
 
+from app.models.comment_model import (
+    TicketComment
+)
+
 from app.core.security import (
     get_current_user
 )
@@ -67,58 +71,77 @@ async def create_ticket(
 
     db: Session = SessionLocal()
 
-    classification = (
-        classify_ticket_ai(
+    try:
+
+        classification = (
+            classify_ticket_ai(
+                ticket.description
+            )
+        )
+
+        summary = summarize_ticket(
             ticket.description
         )
-    )
 
-    summary = summarize_ticket(
-        ticket.description
-    )
-
-    sla_deadline = (
-        datetime.utcnow()
-        + timedelta(hours=24)
-    )
-
-    ai_response = (
-        generate_ticket_response(
-            ticket.description
+        sla_deadline = (
+            datetime.utcnow()
+            + timedelta(hours=24)
         )
-    )
 
-    new_ticket = Ticket(
-        title=ticket.title,
-        description=ticket.description,
-        priority=classification["priority"],
-        sentiment=classification["sentiment"],
-        category=classification["category"],
-        created_at=datetime.utcnow(),
-        sla_deadline=sla_deadline,
-        summary=summary,
-        ai_response=ai_response,
-    )
-
-    db.add(new_ticket)
-
-    db.commit()
-
-    db.refresh(new_ticket)
-
-    log_activity(
-        db,
-        f"Created ticket: {new_ticket.title}",
-        user["username"]
-    )
-
-    asyncio.create_task(
-        broadcast_ticket(
-            "ticket_updated"
+        ai_response = (
+            generate_ticket_response(
+                ticket.description
+            )
         )
-    )
 
-    return new_ticket
+        new_ticket = Ticket(
+            title=ticket.title,
+            description=ticket.description,
+            priority=classification["priority"],
+            sentiment=classification["sentiment"],
+            category=classification["category"],
+            created_at=datetime.utcnow(),
+            sla_deadline=sla_deadline,
+            summary=summary,
+            ai_response=ai_response,
+        )
+
+        db.add(new_ticket)
+
+        db.commit()
+
+        db.refresh(new_ticket)
+
+        log_activity(
+            db,
+            f"Created ticket: {new_ticket.title}",
+            user["username"]
+        )
+
+        asyncio.create_task(
+            broadcast_ticket(
+                "ticket_updated"
+            )
+        )
+
+        return {
+            "id": new_ticket.id,
+            "title": new_ticket.title,
+            "description": new_ticket.description,
+            "priority": new_ticket.priority,
+            "status": new_ticket.status,
+            "sentiment": new_ticket.sentiment,
+            "category": new_ticket.category,
+            "assigned_to": new_ticket.assigned_to,
+            "summary": new_ticket.summary,
+            "created_at": new_ticket.created_at,
+            "sla_deadline": new_ticket.sla_deadline,
+            "ai_response": new_ticket.ai_response,
+        }
+
+    finally:
+
+        db.close()
 
 
 @router.get(
@@ -131,11 +154,18 @@ def get_tickets(
 
     db: Session = SessionLocal()
 
-    tickets = (
-        db.query(Ticket).all()
-    )
+    try:
 
-    return tickets
+        tickets = (
+            db.query(Ticket).all()
+        )
+
+        return tickets
+
+    finally:
+
+        db.close()
+
 
 @router.get(
     "/{ticket_id}",
@@ -148,20 +178,29 @@ def get_ticket_by_id(
 
     db: Session = SessionLocal()
 
-    ticket = (
-        db.query(Ticket)
-        .filter(Ticket.id == ticket_id)
-        .first()
-    )
+    try:
 
-    if not ticket:
-
-        raise HTTPException(
-            status_code=404,
-            detail="Ticket not found"
+        ticket = (
+            db.query(Ticket)
+            .filter(
+                Ticket.id == ticket_id
+            )
+            .first()
         )
 
-    return ticket
+        if not ticket:
+
+            raise HTTPException(
+                status_code=404,
+                detail="Ticket not found"
+            )
+
+        return ticket
+
+    finally:
+
+        db.close()
+
 
 @router.get(
     "/{ticket_id}/activities"
@@ -173,20 +212,103 @@ def get_ticket_activities(
 
     db: Session = SessionLocal()
 
-    logs = (
-        db.query(ActivityLog)
-        .filter(
-            ActivityLog.action.contains(
-                f"{ticket_id}"
+    try:
+
+        logs = (
+            db.query(ActivityLog)
+            .filter(
+                ActivityLog.action.contains(
+                    f"{ticket_id}"
+                )
+            )
+            .order_by(
+                ActivityLog.created_at.desc()
+            )
+            .all()
+        )
+
+        return logs
+
+    finally:
+
+        db.close()
+
+
+@router.get(
+    "/{ticket_id}/comments"
+)
+def get_ticket_comments(
+    ticket_id: int,
+    user=Depends(get_current_user)
+):
+
+    db: Session = SessionLocal()
+
+    try:
+
+        comments = (
+            db.query(TicketComment)
+            .filter(
+                TicketComment.ticket_id
+                == ticket_id
+            )
+            .order_by(
+                TicketComment.created_at.asc()
+            )
+            .all()
+        )
+
+        return comments
+
+    finally:
+
+        db.close()
+
+
+@router.post(
+    "/{ticket_id}/comments"
+)
+async def create_ticket_comment(
+    ticket_id: int,
+    content: str,
+    user=Depends(get_current_user)
+):
+
+    db: Session = SessionLocal()
+
+    try:
+
+        comment = TicketComment(
+            ticket_id=ticket_id,
+            username=user["username"],
+            content=content,
+            created_at=datetime.utcnow()
+        )
+
+        db.add(comment)
+
+        db.commit()
+
+        db.refresh(comment)
+
+        log_activity(
+            db,
+            f"Added comment to ticket {ticket_id}",
+            user["username"]
+        )
+
+        asyncio.create_task(
+            broadcast_ticket(
+                "ticket_updated"
             )
         )
-        .order_by(
-            ActivityLog.created_at.desc()
-        )
-        .all()
-    )
 
-    return logs
+        return comment
+
+    finally:
+
+        db.close()
+
 
 @router.put("/{ticket_id}/status")
 async def update_ticket_status(
@@ -205,45 +327,51 @@ async def update_ticket_status(
 
     db: Session = SessionLocal()
 
-    ticket = (
-        db.query(Ticket)
-        .filter(
-            Ticket.id == ticket_id
-        )
-        .first()
-    )
+    try:
 
-    if not ticket:
-
-        raise HTTPException(
-            status_code=404,
-            detail="Ticket not found"
+        ticket = (
+            db.query(Ticket)
+            .filter(
+                Ticket.id == ticket_id
+            )
+            .first()
         )
 
-    ticket.status = status
+        if not ticket:
 
-    db.commit()
+            raise HTTPException(
+                status_code=404,
+                detail="Ticket not found"
+            )
 
-    db.refresh(ticket)
+        ticket.status = status
 
-    log_activity(
-        db,
-        (
-            f"Changed status "
-            f"of ticket "
-            f"{ticket.id} "
-            f"to {status}"
-        ),
-        user["username"]
-    )
+        db.commit()
 
-    asyncio.create_task(
-        broadcast_ticket(
-            "ticket_updated"
+        db.refresh(ticket)
+
+        log_activity(
+            db,
+            (
+                f"Changed status "
+                f"of ticket "
+                f"{ticket.id} "
+                f"to {status}"
+            ),
+            user["username"]
         )
-    )
 
-    return ticket
+        asyncio.create_task(
+            broadcast_ticket(
+                "ticket_updated"
+            )
+        )
+
+        return ticket
+
+    finally:
+
+        db.close()
 
 
 @router.put("/{ticket_id}/assign")
@@ -263,43 +391,49 @@ async def assign_ticket(
 
     db: Session = SessionLocal()
 
-    ticket = (
-        db.query(Ticket)
-        .filter(
-            Ticket.id == ticket_id
-        )
-        .first()
-    )
+    try:
 
-    if not ticket:
-
-        raise HTTPException(
-            status_code=404,
-            detail="Ticket not found"
+        ticket = (
+            db.query(Ticket)
+            .filter(
+                Ticket.id == ticket_id
+            )
+            .first()
         )
 
-    ticket.assigned_to = (
-        assigned_to
-    )
+        if not ticket:
 
-    db.commit()
+            raise HTTPException(
+                status_code=404,
+                detail="Ticket not found"
+            )
 
-    db.refresh(ticket)
-
-    log_activity(
-        db,
-        (
-            f"Assigned ticket "
-            f"{ticket.id} "
-            f"to {assigned_to}"
-        ),
-        user["username"]
-    )
-
-    asyncio.create_task(
-        broadcast_ticket(
-            "ticket_updated"
+        ticket.assigned_to = (
+            assigned_to
         )
-    )
 
-    return ticket
+        db.commit()
+
+        db.refresh(ticket)
+
+        log_activity(
+            db,
+            (
+                f"Assigned ticket "
+                f"{ticket.id} "
+                f"to {assigned_to}"
+            ),
+            user["username"]
+        )
+
+        asyncio.create_task(
+            broadcast_ticket(
+                "ticket_updated"
+            )
+        )
+
+        return ticket
+
+    finally:
+
+        db.close()

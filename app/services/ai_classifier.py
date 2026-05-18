@@ -15,7 +15,9 @@ def classify_ticket_ai(
     text: str
 ):
 
-    result = sentiment_pipeline(text)[0]
+    result = sentiment_pipeline(
+        text
+    )[0]
 
     label = result["label"]
 
@@ -26,6 +28,7 @@ def classify_ticket_ai(
         or "urgent" in text.lower()
         or label == "NEGATIVE"
     ):
+
         priority = "High"
 
     category = "General"
@@ -33,11 +36,13 @@ def classify_ticket_ai(
     if (
         "payment" in text.lower()
     ):
+
         category = "Billing"
 
     elif (
         "login" in text.lower()
     ):
+
         category = "Authentication"
 
     sentiment = (
@@ -65,22 +70,50 @@ def generate_ticket_response(
 ):
 
     prompt = f"""
-    Customer issue:
-    {text}
+Customer issue:
+{text}
 
-    Support response:
-    """
+Write a short professional
+customer support response.
+Keep it under 3 sentences.
+Do not repeat phrases.
+"""
 
     result = generator_pipeline(
+
         prompt,
-        max_length=80,
-        num_return_sequences=1
+
+        max_new_tokens=60,
+
+        do_sample=True,
+
+        temperature=0.7,
+
+        top_k=50,
+
+        top_p=0.95,
+
+        repetition_penalty=1.4,
+
+        num_return_sequences=1,
+
+        truncation=True,
+
+        pad_token_id=50256
     )
 
-    generated = result[0]["generated_text"]
+    generated = (
+        result[0]
+        ["generated_text"]
+    )
 
-    response = generated.split(
-        "Support response:"
-      )[-1].strip()
+    response = generated.replace(
+        prompt,
+        ""
+    ).strip()
+
+    response = (
+        response[:300]
+    )
 
     return response

@@ -8,8 +8,7 @@ from sqlalchemy import (
 
 from datetime import datetime
 
-from app.database.base import Base
-
+from app.database.connection import Base
 class TicketComment(Base):
 
     __tablename__ = "ticket_comments"

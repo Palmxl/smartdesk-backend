@@ -37,13 +37,34 @@ async def chat_socket(
 
         while True:
 
-            data = await websocket.receive_text()
+            try:
 
-            parts = data.split(":", 1)
+                data = (
+                    await websocket
+                    .receive_text()
+                )
 
-            username = parts[0].strip()
+            except:
 
-            content = parts[1].strip()
+                break
+
+            parts = data.split(
+                ":",
+                1
+            )
+
+            if len(parts) < 2:
+                continue
+
+            username = (
+                parts[0]
+                .strip()
+            )
+
+            content = (
+                parts[1]
+                .strip()
+            )
 
             new_message = Message(
                 username=username,
@@ -54,9 +75,13 @@ async def chat_socket(
 
             db.commit()
 
-            await manager.broadcast(data)
+            db.refresh(new_message)
 
-    except WebSocketDisconnect:
+            await manager.broadcast(
+                data
+            )
+
+    finally:
 
         manager.disconnect(
             websocket,
@@ -65,12 +90,23 @@ async def chat_socket(
 
         await manager.broadcast_online_users()
 
+        db.close()
+
 
 @router.get("/messages")
 def get_messages():
 
     db: Session = SessionLocal()
 
-    messages = db.query(Message).all()
+    try:
 
-    return messages
+        messages = (
+            db.query(Message)
+            .all()
+        )
+
+        return messages
+
+    finally:
+
+        db.close()

@@ -15,7 +15,9 @@ async def websocket_endpoint(
     websocket: WebSocket
 ):
 
-    await manager.connect(websocket)
+    await manager.connect(
+        websocket
+    )
 
     try:
 
@@ -25,4 +27,12 @@ async def websocket_endpoint(
 
     except WebSocketDisconnect:
 
-        manager.disconnect(websocket)
+        manager.disconnect(
+            websocket
+        )
+
+    except Exception:
+
+        manager.disconnect(
+            websocket
+        )
